@@ -1,0 +1,6 @@
+- id: md_plantum_converter
+  name: Markdown Plantuml Converter
+  description: Reads plantum markups in markdown documentation, parses them  and inserts a link to reander the svg representation
+  entry: md_plantuml_converter.sh
+  language: script
+  types: [markdown, plantuml]
