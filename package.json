@@ -1,0 +1,25 @@
+{
+  "name": "@entrofi/pre-commit-hooks",
+  "bin": {
+    "mdplantuml": "./pre_commit_md_plantuml_converter.sh",
+    "convert-plantuml": "./src/convert-plantuml.js"
+  },
+  "scripts": {
+    "convert-plantuml": "./src/convert-plantuml.js",
+    "test": "jest",
+    "lint": "eslint --fix --ext .js"
+  },
+  "version": "0.0.1",
+  "dependencies": {
+    "colors": "^1.4.0",
+    "crypto": "^1.0.1",
+    "docopt": "^0.6.2",
+    "node-plantuml": "^0.9.0"
+  },
+  "devDependencies": {
+    "colors": "^1.4.0",
+    "eslint": ">=5.16.0",
+    "eslint-config-google": "^0.14.0",
+    "jest": "^28.1.3"
+  }
+}
