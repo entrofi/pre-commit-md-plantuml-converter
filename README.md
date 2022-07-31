@@ -1,7 +1,7 @@
 # pre-commit-md-plantuml-converter - 
 > A markdown plantuml snippet to image converter pre-commit hook
 
-!-- toc -->
+<!-- toc -->
 
 <!-- Regenerate with "pre-commit run -a markdown-toc" -->
 
