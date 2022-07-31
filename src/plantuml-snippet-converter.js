@@ -177,7 +177,7 @@ class PlantumlSnippetConverter {
    *     several **lines**;
    *     @enduml
    *      ```
-   *     ![](output_1658728903544.png)
+   *     ![](output_165872890353333344.png)
    * </code></pre>
    *
    * @return {string | undefined}
