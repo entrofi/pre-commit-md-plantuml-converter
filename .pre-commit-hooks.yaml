@@ -3,5 +3,5 @@
   description: Reads plantum markups in markdown documentation, parses them  and inserts a link to render the svg|png|jpg representation
   entry: mdplantuml
   language: node
-  args: [--extension=png, --image-dir=./docs/assets/puml,  --prefix= ]    #types: ["markdown", "plantuml"]
+  args: [--extension=png, --image-dir=gen_docs/assets/puml,  --prefix= ]    #types: ["markdown", "plantuml"]
   files:  \.md$

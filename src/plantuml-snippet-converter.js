@@ -3,23 +3,43 @@ const fs = require('fs');
 const crypto = require('crypto');
 const CollapsibleSnippet = require('./collapsible-snippet');
 const MdPumlMatchers = require('./md-puml-matchers');
+const RegExUtils = require('./regex-utils');
+
+/**
+ * Image name data holder.
+ * @param {string} filenamePrefix sole filename without the extension
+ * @param {string}  imageDir directory of the image
+ * @param {string}  relativeToRoot path relative to repository root
+ * @param {string}  relativeToWorkDir path relative to current working directory
+ * @param {string}  extension file extension
+ * @param {string}  imageFilename filename with extension without the path
+ * @constructor
+ */
+function ImageNameData(filenamePrefix, imageDir, relativeToRoot, relativeToWorkDir, extension,
+    imageFilename) {
+  this.filenamePrefix = filenamePrefix;
+  this.relativeToRoot = relativeToRoot;
+  this.relativeToWorkDir = relativeToWorkDir;
+  this.imageDir = imageDir;
+  this.extension = extension;
+  this.imageFileName = imageFilename;
+}
 
 /**
  *
  */
 class PlantumlSnippetConverter {
-  #dottedExt;
   /**
    *
    * @param {string} mdPlantumlSnippet plant uml snippet to parse
-   * @param {string} extension extension of the file image. Currently only png, svg, and esp are supported
-   * @param {string} imagePath default relative directory to save the generated image into
+   * @param {string} extension   extension of the file image. Currently only png, svg, and esp are supported
+   * @param {string} workingDir  current working dir for the markdown file
+   * @param {string} imagePath   default relative directory to save the generated image into
    * @param {string} imagePrefix prefix to use on generated image file names.
    */
-  constructor(mdPlantumlSnippet, {extension= 'png', imagePath= '', imagePrefix}) {
+  constructor(mdPlantumlSnippet, {extension= 'png', workingDir= '.', imagePath= '', imagePrefix}) {
     this.mdPlantumSnippet = mdPlantumlSnippet;
-    this.options = {extension, imagePath, imagePrefix};
-    this.#dottedExt = `.${this.options.extension}`;
+    this.options = {extension, imagePath: imagePath.replace(/^.\//, ''), imagePrefix, workingDir};
   }
 
   /**
@@ -27,22 +47,21 @@ class PlantumlSnippetConverter {
    * @return {string} markdown output to replace with plantuml snippet
    */
   convert() {
-    const generatedImagePath = this.generateImage();
+    const generatedImageNameData = this.generateImage();
     let markdownOutput = this.mdPlantumSnippet;
     markdownOutput = CollapsibleSnippet.makeCollapsible(markdownOutput);
-    markdownOutput = this.#updateImageLink(markdownOutput, generatedImagePath);
+    markdownOutput = PlantumlSnippetConverter.#updateImageLink(markdownOutput, generatedImageNameData);
     return markdownOutput;
   }
 
   /**
    * Generates an image using the plantuml markup provided in {@link this.#mdPlantumlSnippet} and writes
    * it to the file system
-   * @return {string} file save path of the generated image
+   * @return {ImageNameData} file information for the saved image
    */
   generateImage() {
-    const pumlMarkupMatcher = /(?<=`{3}plantuml\n)([\S\s]*?)(@enduml){1}(?=\n`{3})/;
+    const pumlMarkupMatcher = /(?<=`{3}plantuml\n)([\S\s]*?)(@enduml){1}(?!`{3})/;
     const plantumlMarkup = this.mdPlantumSnippet.match(pumlMarkupMatcher)[0];
-
     const generated = nodePlantuml.generate(plantumlMarkup, {format: this.options.extension});
     return this.#writeImageFile(generated, plantumlMarkup);
   }
@@ -60,90 +79,80 @@ class PlantumlSnippetConverter {
    * :print not red;
    * @enduml
    * </code></pre>
-   * @return {string} path of the file saved
+   * @return {ImageNameData} path of the file saved
    */
   #writeImageFile(generatedOutput, plantumlMarkup) {
-    const outputFilename = this.#fetchOrCreateImageName(plantumlMarkup);
-    const imageDir = this.options.imagePath ? `${this.options.imagePath}/`: '';
-    PlantumlSnippetConverter.#generateImageDir(imageDir);
-    const outputFilePath = `${imageDir}${outputFilename}`;
-    generatedOutput.out.pipe(fs.createWriteStream(outputFilePath));
-    return outputFilePath;
-  }
-
-  /**
-   *
-   * @param {string} mdPumlSnippet
-   * @param {string} imagePath new image path to replace an existing one or insert fresh
-   * @return {string} mdPumlSnippet with image link at the end
-   */
-  #updateImageLink(mdPumlSnippet, imagePath) {
-    let outputmd;
-
-    const imageLink = (path) => `\n\n![](${path})`;
-
-    const hasImageLink = MdPumlMatchers.imageLinkMatcher.test(mdPumlSnippet);
-    if (hasImageLink) {
-      const newImagePath = this.#refreshImageName(mdPumlSnippet, imagePath);
-      outputmd = mdPumlSnippet.trimEnd().replace(MdPumlMatchers.imageLinkMatcher, imageLink(newImagePath.trim()));
-    } else {
-      outputmd = mdPumlSnippet.trimEnd() + imageLink(imagePath);
-    }
-
-    return outputmd;
-  }
-
-  /**
-   *
-   * @param {string} mdPumlSnippet
-   * @param {string} imagePath
-   * @return {string}
-   */
-  #refreshImageName(mdPumlSnippet, imagePath) {
-    let newImagePath = imagePath;
-    const extractedPath = PlantumlSnippetConverter.extractPathFromRefLink(mdPumlSnippet);
-
-    let filenameMatchWithGroups;
-    filenameMatchWithGroups = MdPumlMatchers.imageNameAndExtension.exec(newImagePath);
-    filenameMatchWithGroups = filenameMatchWithGroups == null ?
-        MdPumlMatchers.imageNameAndExtension.exec(newImagePath) :
-        filenameMatchWithGroups;
-
-    if (extractedPath && filenameMatchWithGroups?.groups.extension !== this.#dottedExt) {
-      newImagePath = `${filenameMatchWithGroups?.groups.filename}.${this.#dottedExt}`;
-    }
-    return newImagePath;
-  }
-
-
-  // eslint-disable-next-line valid-jsdoc,require-jsdoc
-  static #generateImageDir(dir) {
-    if (dir && !fs.existsSync(dir)) {
-      fs.mkdirSync(dir, {recursive: true});
-    }
+    const outputFileNameData = this.#fetchOrCreateImageName(plantumlMarkup);
+    PlantumlSnippetConverter.#generateImageDir(outputFileNameData.imageDir);
+    generatedOutput.out.pipe(fs.createWriteStream(outputFileNameData.relativeToRoot));
+    return outputFileNameData;
   }
 
   /**
    *
    * @param {string} plantumlMarkup pure plantuml markup string i.e. not a markdown snippet
-   * @return {string|undefined}
+   * @return {ImageNameData|undefined}
    */
   #fetchOrCreateImageName(plantumlMarkup) {
-    const oldImagePath = PlantumlSnippetConverter.extractPathFromRefLink(this.mdPlantumSnippet);
-    let imageRef = oldImagePath;
+    const oldImageData = PlantumlSnippetConverter.extractPathFromRefLink(this.mdPlantumSnippet);
 
-    if (!oldImagePath || oldImagePath.match(/\.[0-9a-z]+$/i)[0] !== `.${this.options.extension}`) {
-      const filenameHash = crypto.createHash('md5').update(plantumlMarkup).digest('hex');
-      imageRef = `${this.options.imagePrefix ? this.options.imagePrefix : ''}${filenameHash}.${this.options.extension}`;
+    let imageRef = oldImageData;
+
+    if (!oldImageData || oldImageData.extension !== `${this.options.extension}`) {
+      imageRef = this.#createImageNameFor(plantumlMarkup);
     }
     return imageRef;
   }
 
   /**
+   * Uses plain plantuml markup to generate filename related information e.g. filename prefix, extension, path, savepath
+   * See {@link ImageNameData}
+   * @param {string} plantumlMarkup plantuml markup string
+   * @return {ImageNameData}
+   */
+  #createImageNameFor(plantumlMarkup) {
+    const filenameHash = crypto.createHash('md5').update(plantumlMarkup).digest('hex');
+    const filenamePrefix = `${this.options.imagePrefix ? this.options.imagePrefix : ''}${filenameHash}`;
+    const imageFilename = `${this.options.imagePrefix ? this.options.imagePrefix : ''}${filenameHash}.${this.options.extension}`;
+    const imageNameData = new ImageNameData();
+    imageNameData.filenamePrefix = filenamePrefix;
+    imageNameData.extension = this.options.extension;
+    imageNameData.imageFileName = imageFilename;
+    imageNameData.imageDir = PlantumlSnippetConverter
+        .mergePathSegments(this.options.workingDir, this.options.imagePath);
+    imageNameData.relativeToRoot = PlantumlSnippetConverter
+        .mergePathSegments(this.options.workingDir, this.options.imagePath, imageFilename);
+    imageNameData.relativeToWorkDir = PlantumlSnippetConverter
+        .mergePathSegments( './', this.options.imagePath, imageFilename);
+    return imageNameData;
+  }
+
+  /**
+   *
+   * @param {string} mdPumlSnippet
+   * @param {ImageNameData} imageNameData new image path data to replace an existing one or insert fresh
+   * @return {string} mdPumlSnippet with image link at the end
+   */
+  static #updateImageLink(mdPumlSnippet, imageNameData) {
+    let outputMd;
+
+    const imageLink = (path) => `\n\n![](${path})\n\n`;
+
+    const hasImageLink = MdPumlMatchers.imageLinkMatcher.test(mdPumlSnippet);
+    if (hasImageLink) {
+      outputMd = mdPumlSnippet.trimEnd()
+          .replace(MdPumlMatchers.imageLinkMatcher, imageLink(imageNameData.relativeToWorkDir.trim()));
+    } else {
+      outputMd = mdPumlSnippet.trimEnd() + imageLink(imageNameData.relativeToWorkDir.trim());
+    }
+
+    return outputMd;
+  }
+
+  /**
    * Extracts the file path reference from an markdown plantuml snippet which is followed by an image link
-   * @param {string} mdPumlSnippetWithImageLink markdown plantuml snippet with image link or none. The following are
-   * valid:<br/>
-   * ```
+   * <p>The following are valid inputs:</p>
+   * ~~~
    *      <details>
    *        <summary>Click to expand the puml definition!</summary>
    *
@@ -166,10 +175,11 @@ class PlantumlSnippetConverter {
    *      </details>
    *
    *      ![](3333638a3649518f7ab5edab88b22c16.jpg)
-   *      '
-   * ```
+   *
+   * ~~~
    *  or, <br/>
    * <pre><code>
+   * ~~~
    *     ```plantuml
    *     @startuml
    *     :2. Hello world*!!!!*;
@@ -178,15 +188,73 @@ class PlantumlSnippetConverter {
    *     @enduml
    *      ```
    *     ![](output_165872890353333344.png)
+   * ~~~
    * </code></pre>
    *
-   * @return {string | undefined}
+   * @param {string} mdPumlSnippetWithImageLink markdown plantuml snippet with image link or none.
+   * @return {ImageNameData | undefined}
    */
   static extractPathFromRefLink(mdPumlSnippetWithImageLink) {
-    const filenameRegex = /(?<=!\[\]\()(?<filePath>.*)(?=\))/gm;
-    const matchedResult = filenameRegex.exec(mdPumlSnippetWithImageLink);
-    return matchedResult?.groups?.filePath;
+    const matcher = MdPumlMatchers.resetAndGetImageLinkNamePathExtesionGroups();
+    const matchResult = matcher.exec(mdPumlSnippetWithImageLink);
+    let imageNameData;
+    if (matchResult?.groups) {
+      imageNameData = new ImageNameData();
+      const dottedExtensionMatch = matchResult?.groups?.extension;
+      imageNameData.extension = dottedExtensionMatch.replace(/^./, '');
+      imageNameData.filenamePrefix = matchResult?.groups?.filenamePrefix;
+      imageNameData.imageFileName = `${imageNameData.filenamePrefix}${dottedExtensionMatch}`;
+      imageNameData.imageDir = matchResult.groups?.filePath;
+      imageNameData.relativeToRoot = this.mergePathSegments(imageNameData.imageDir, imageNameData.imageFileName);
+      imageNameData.relativeToWorkDir = imageNameData.relativeToRoot;
+    }
+
+    return imageNameData;
+  }
+
+  /**
+   *
+   * @param {string} pioneer
+   * @param {...string} followers
+   * @return {string} combined path string
+   */
+  static mergePathSegments(pioneer, ...followers) {
+    const mergedFollowers = followers.reduce(
+        (merged, current) => PlantumlSnippetConverter.mergeTwoPathSegments(merged, current),
+    );
+    return PlantumlSnippetConverter.mergeTwoPathSegments(pioneer, mergedFollowers);
+  }
+
+  /**
+   *
+   * @param {string} pioneer
+   * @param {string} follower
+   * @return {string | *} combined path string
+   */
+  static mergeTwoPathSegments(pioneer, follower) {
+    const dirSeperator = '/';
+    let merged;
+    if (pioneer) {
+      const endSeperatorStrip = new RegExp(`${RegExUtils.escapeRegExChars(dirSeperator)}$`);
+      const startSeperatorStrip = new RegExp(`\^\.?${RegExUtils.escapeRegExChars(dirSeperator)}`);
+      merged = pioneer;
+      merged = follower ?
+          `${pioneer.replace(endSeperatorStrip, '')}${dirSeperator}${follower.replace(startSeperatorStrip, '')}` :
+          merged;
+    } else {
+      merged = follower;
+    }
+    return merged;
+  }
+  // eslint-disable-next-line valid-jsdoc,require-jsdoc
+  static #generateImageDir(dir) {
+    if (dir && !fs.existsSync(dir)) {
+      fs.mkdirSync(dir, {recursive: true});
+    }
   }
 }
 
-module.exports = PlantumlSnippetConverter;
+module.exports = {
+  PlantumlSnippetConverter,
+  ImageNameData,
+};

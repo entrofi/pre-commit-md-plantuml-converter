@@ -67,7 +67,7 @@ You can define the hook in you `.pre-commit-config.yaml` file as follows:
 ```yaml
 repos:
   - repo: https://github.com/entrofi/pre-commit-md-plantuml-converter
-    rev: v0.0.1
+    rev: v0.0.2
     hooks:
       - id:  md_plantuml_converter
         args: [--extension=png, --image-dir=./docs/assets/puml,  --prefix= ]

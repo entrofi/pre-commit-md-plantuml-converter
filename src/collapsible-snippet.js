@@ -33,7 +33,8 @@ ${CollapsibleSnippet.#TPL_IMAGE_LINK_PLACE_HOLDER}
    */
   static makeCollapsible(plantumlMdSnippet) {
     const imageLinkMatcher = MdPumlMatchers.imageLinkMatcher;
-    let collapsible = plantumlMdSnippet;
+    imageLinkMatcher.lastIndex = 0;
+    let collapsible = plantumlMdSnippet.trim();
     if (plantumlMdSnippet.search(/(<details>)/) < 0) {
       collapsible = CollapsibleSnippet.#COLLAPSE_TPL;
       let imageLinkIndex;
