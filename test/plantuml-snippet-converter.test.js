@@ -53,7 +53,6 @@ const snippetConverterSVG = new PlantumlSnippetConverter(sampleNoLinkInputSnippe
 describe('PlantumlSnippetConverter tests', () => {
   afterAll(() => {
     fs.rmSync(testImagePath, {recursive: true, force: true});
-    fs.rmSync();
   });
 
   test('Converts markdown plantuml snippet with image path', () => {

@@ -9,12 +9,11 @@
     "test": "jest",
     "lint": "eslint --fix --ext .js"
   },
-  "version": "0.0.1",
+  "version": "0.0.2",
   "dependencies": {
     "colors": "^1.4.0",
-    "crypto": "^1.0.1",
     "docopt": "^0.6.2",
-    "node-plantuml": "github:entrofi/node-plantuml"
+    "@entrofi/node-plantuml": "0.9.1"
   },
   "devDependencies": {
     "colors": "^1.4.0",

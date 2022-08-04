@@ -1,4 +1,4 @@
-const nodePlantuml = require('node-plantuml');
+const nodePlantuml = require('@entrofi/node-plantuml');
 const fs = require('fs');
 const crypto = require('crypto');
 const CollapsibleSnippet = require('./collapsible-snippet');
