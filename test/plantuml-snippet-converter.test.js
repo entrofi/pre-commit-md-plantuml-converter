@@ -24,7 +24,7 @@ const getImageNameDataWith = (imageDir, extension, relativeToRootPath, relativeT
   return getImageNameData(sampleImgFilenamePrefix, imageDir, relativeToRootPath, relativeToWorkDirPath, extension);
 };
 
-const sampleMDOutputTplWith = (extension, imageName, savePath) => `
+const sampleMDOutputTplWith = (extension, imageName, savePath, isNew= true) => `
 <details>
   <summary>Click to expand the puml definition!</summary>
 
@@ -39,7 +39,7 @@ else
 
 </details>
 
-![](${expectedImagePathWith(extension, imageName, savePath)})\n\n`;
+![](${expectedImagePathWith(extension, imageName, savePath)})${isNew ? '\n\n' : ''}`;
 
 const testImagePath = '.tmp/assets/puml';
 
@@ -87,7 +87,10 @@ else
 `;
     const snippetConverterWOPath = new PlantumlSnippetConverter(trickySnippet,
         {extension: 'png'});
-    expect(snippetConverterWOPath.convert()).toBe(sampleMDOutputTplWith('png', 'output_1658728903544'));
+    expect(snippetConverterWOPath.convert())
+        .toBe(
+            sampleMDOutputTplWith('png', 'output_1658728903544', undefined, false),
+        );
   });
 
   test('generateImage() generates a png image with correct path', () => {
@@ -115,7 +118,7 @@ else
   });
 
   test('Should replace relative path references correctly', () => {
-    const snippetWithRelImagePath = `# A collapsible section with markdown\n<details>\n  <summary>Click to expand the puml definition!</summary>\n\n\`\`\`plantuml\n@startuml\nHasan -> Bob: Esenlikler Bob cugum\nBob --> Hasan: How are you\nBob --> Alice: Hello Alice\n\nAlice -> Bob: Another authentication Request\nAlice <-- Bob: Another authentication Response\n@enduml\n\`\`\`\n</details>\n\n![](./docs/assets/puml/README_b8115805a361deae478ef76dc2e0ab32.png)\n\n`;
+    const snippetWithRelImagePath = `# A collapsible section with markdown\n<details>\n  <summary>Click to expand the puml definition!</summary>\n\n\`\`\`plantuml\n@startuml\nHasan -> Bob: Esenlikler Bob cugum\nBob --> Hasan: How are you\nBob --> Alice: Hello Alice\n\nAlice -> Bob: Another authentication Request\nAlice <-- Bob: Another authentication Response\n@enduml\n\`\`\`\n</details>\n\n![](./docs/assets/puml/README_b8115805a361deae478ef76dc2e0ab32.png)`;
     const snippetConverterWOPath = new PlantumlSnippetConverter(snippetWithRelImagePath,
         {extension: 'png', workingDir: '.', imagePath: './docs/assets/puml', imagePrefix: 'README_'});
     expect(snippetConverterWOPath.convert()).toBe(snippetWithRelImagePath);

@@ -136,14 +136,14 @@ class PlantumlSnippetConverter {
   static #updateImageLink(mdPumlSnippet, imageNameData) {
     let outputMd;
 
-    const imageLink = (path) => `\n\n![](${path})\n\n`;
+    const imageLink = (path, isNew) => `\n\n![](${path})${isNew ? '\n\n' : ''}`;
 
     const hasImageLink = MdPumlMatchers.imageLinkMatcher.test(mdPumlSnippet);
     if (hasImageLink) {
       outputMd = mdPumlSnippet.trimEnd()
-          .replace(MdPumlMatchers.imageLinkMatcher, imageLink(imageNameData.relativeToWorkDir.trim()));
+          .replace(MdPumlMatchers.imageLinkMatcher, imageLink(imageNameData.relativeToWorkDir.trim(), false));
     } else {
-      outputMd = mdPumlSnippet.trimEnd() + imageLink(imageNameData.relativeToWorkDir.trim());
+      outputMd = mdPumlSnippet.trimEnd() + imageLink(imageNameData.relativeToWorkDir.trim(), true);
     }
 
     return outputMd;
