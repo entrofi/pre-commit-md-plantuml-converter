@@ -10,7 +10,7 @@ ${content}
 
 ${appenditure}
 `;
-describe( 'Generates a collapsibe snippet', () => {
+describe( 'CollapsibleSnippet test', () => {
   const sampleContent = `\n\`\`\`plantuml
 @startuml
 :2. Hello world*!!!!*;
