@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const CollapsibleSnippet = require('./collapsible-snippet');
 const MdPumlMatchers = require('./md-puml-matchers');
 const RegExUtils = require('./regex-utils');
+const colors = require('colors');
 
 /**
  * Image name data holder.
@@ -47,10 +48,15 @@ class PlantumlSnippetConverter {
    * @return {string} markdown output to replace with plantuml snippet
    */
   convert() {
-    const generatedImageNameData = this.generateImage();
     let markdownOutput = this.mdPlantumSnippet;
-    markdownOutput = CollapsibleSnippet.makeCollapsible(markdownOutput);
-    markdownOutput = PlantumlSnippetConverter.#updateImageLink(markdownOutput, generatedImageNameData);
+    try {
+      const generatedImageNameData = this.generateImage();
+
+      markdownOutput = CollapsibleSnippet.makeCollapsible(markdownOutput);
+      markdownOutput = PlantumlSnippetConverter.#updateImageLink(markdownOutput, generatedImageNameData);
+    } catch (e) {
+      console.error(`The snippet below is captured but can not be processed. Skipping:\n  ${colors.red(this.mdPlantumSnippet)}`, e.message);
+    }
     return markdownOutput;
   }
 
@@ -60,10 +66,14 @@ class PlantumlSnippetConverter {
    * @return {ImageNameData} file information for the saved image
    */
   generateImage() {
-    const pumlMarkupMatcher = /(?<=`{3}plantuml\n)([\S\s]*?)(@enduml){1}(?!`{3})/;
-    const plantumlMarkup = this.mdPlantumSnippet.match(pumlMarkupMatcher)[0];
-    const generated = nodePlantuml.generate(plantumlMarkup, {format: this.options.extension});
-    return this.#writeImageFile(generated, plantumlMarkup);
+    const pumlMarkupMatcher = /(?<=`{3}plantuml)(\s*?)(?<plantuml>(@startuml)([\S\s]*?)(@enduml){1})(?!`{3})/m;
+    const match = pumlMarkupMatcher.exec(this.mdPlantumSnippet);
+    if (match !== null) {
+      const plantumlMarkup = match.groups.plantuml;
+      const generated = nodePlantuml.generate(plantumlMarkup, {format: this.options.extension});
+      return this.#writeImageFile(generated, plantumlMarkup);
+    }
+    return undefined;
   }
 
   /**

@@ -1,17 +1,20 @@
 const PlantumlSnippetConverter = require('../src/plantuml-snippet-converter').PlantumlSnippetConverter;
 const ImageNameData = require('../src/plantuml-snippet-converter').ImageNameData;
 const fs = require('fs');
+const crypto = require('crypto');
+const {PassThrough} = require('stream');
 
-const sampleNoLinkInputSnippet = `\`\`\`plantuml
-@startuml
+const samplePlantuml = `@startuml
 if (color?) is (<color:red>red) then
 :print red;
 else
 :print not red;
-@enduml
+@enduml`;
+const sampleNoLinkInputSnippet = `\`\`\`plantuml
+${samplePlantuml}
 \`\`\``;
 
-const sampleImgFilenamePrefix = 'd723db8c7063fdd0cc764a8f46fbd3ad';
+const sampleImgFilenamePrefix = crypto.createHash('md5').update(`${samplePlantuml}`).digest('hex');
 const expectedImagePathWith = (extension, imageFileNamePrefix, savePath) => `${savePath? savePath + '/': ''}${imageFileNamePrefix}.${extension}`;
 
 const getImageNameData = (filenamePrefix, imageDir, relativeToRootPath, relativeToWorkDirPath, extension) => {
@@ -28,14 +31,7 @@ const sampleMDOutputTplWith = (extension, imageName, savePath, isNew= true) => `
 <details>
   <summary>Click to expand the puml definition!</summary>
 
-\`\`\`plantuml
-@startuml
-if (color?) is (<color:red>red) then
-:print red;
-else
-:print not red;
-@enduml
-\`\`\`
+${sampleNoLinkInputSnippet}
 
 </details>
 
@@ -51,8 +47,8 @@ const snippetConverterSVG = new PlantumlSnippetConverter(sampleNoLinkInputSnippe
     {extension: 'svg', workingDir: '.', imagePath: testImagePath});
 
 describe('PlantumlSnippetConverter tests', () => {
-  afterAll(() => {
-    fs.rmSync(testImagePath, {recursive: true, force: true});
+  beforeEach(() => {
+    fs.createWriteStream = jest.fn().mockReturnValueOnce(new PassThrough());
   });
 
   test('Converts markdown plantuml snippet with image path', () => {
