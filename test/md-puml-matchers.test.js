@@ -2,7 +2,7 @@ const MdPumlMatchers = require('../src/md-puml-matchers');
 const PumlMdTestUtil = require('./puml-md-snippet-test-utils');
 
 
-describe( 'Markdown plantuml matchers', () => {
+describe( 'MdPumlMatchers test', () => {
   test('Should match path, filename and extension in groups', () => {
     const samplePath = '/abce/dire.ctory/at somewhere b/';
     const samplePathWithDot = `.${samplePath}`;
