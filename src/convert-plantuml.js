@@ -30,14 +30,15 @@ mdPumlConverterCommand
       const markdown = readFile();
       const options = this.opts();
       const extension = options.extension;
-      const prefix = options.imagePath;
-      const imagePath = options.imagePrefix;
+      const prefix = options.imagePrefix;
+      const imagePath = options.imagePath;
       const markdownFilePath = options.markdownFilePath;
       const pumlMdSnippetMatch = MdPumlMatchers.resetAndGetMarkdownPlantumlSnippetMatcher();
       const processedOutput = markdown.replace(pumlMdSnippetMatch,
           (s) => convertPumlMarkup(s, extension, markdownFilePath, prefix, imagePath));
       const outputFile = options.outputFile ? options.outputFile : markdownFile;
       fs.writeFileSync(outputFile, processedOutput);
+      process.exit();
     });
 
 
