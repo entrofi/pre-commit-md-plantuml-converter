@@ -62,13 +62,18 @@ The plantuml snippets can be defined as follows:
 
 ## Usage
 
-You can define the hook in you `.pre-commit-config.yaml` file as follows: 
+First you need to install the [pre-commit framework](https://pre-commit.com/#install). After installing the pre-commit framework, you can define the hook in your `.pre-commit-config.yaml` file as follows: 
 
 ```yaml
 repos:
   - repo: https://github.com/entrofi/pre-commit-md-plantuml-converter
-    rev: v0.0.2-RC2
+    rev: v0.0.2-RC3
     hooks:
       - id:  md_plantuml_converter
         args: [--extension=png, --image-dir=./docs/assets/puml,  --prefix= ]
 ```
+
+### Arguments
+1. **extension:** Possible values for the `extension` argument are `svg`, `png` and `esp`.
+2. **image-dir:** image directory to save the generated images relative to the markdown file under processing. 
+3. **prefix:** custom prefix to add the names of the generated image files.  
