@@ -71,12 +71,12 @@ function getImagePrefix {
   echo "${imagePrefixPrefix}"
 }
 
+
 debugScriptArgs "$@"
 
 for filename in "$@"; do
   prepareFileDetails "${filename}"
   prefixForImages=$(getImagePrefix "${FILE_NAME_PREFIX}")
-  fileContent=$(cat $filename)
   debugFileVars "${filename}" "${prefixForImages}"
-  convert-plantuml "${fileContent}" "${EXTENSION}" "${FILE_PATH:-"."}" "${IMAGE_DIR}" ${prefixForImages} > "${filename}"
+  convert-plantuml run "${filename}" -e "${EXTENSION}" -f "${FILE_PATH:-"."}" -i "${IMAGE_DIR}" -p ${prefixForImages}
 done
