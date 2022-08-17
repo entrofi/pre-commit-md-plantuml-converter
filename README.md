@@ -1,4 +1,4 @@
-[![Node.js CI](https://github.com/entrofi/pre-commit-md-plantuml-converter/actions/workflows/node.js.yml/badge.svg)](https://github.com/entrofi/pre-commit-md-plantuml-converter/actions/workflows/node.js.yml)
+[![Node.js CI](https://github.com/entrofi/pre-commit-md-plantuml-converter/actions/workflows/node.js.yml/badge.svg?event=push)](https://github.com/entrofi/pre-commit-md-plantuml-converter/actions/workflows/node.js.yml)
 
 # pre-commit-md-plantuml-converter - 
 > A markdown plantuml snippet to image converter pre-commit hook
