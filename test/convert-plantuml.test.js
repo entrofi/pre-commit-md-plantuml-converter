@@ -2,8 +2,6 @@ const {exec} = require('child_process');
 const fs = require('fs');
 
 
-jest.setTimeout(15000);
-
 // TODO convert this to unit test
 describe('convert-plantuml cli integration test', () => {
   test('should convert', (done) => {
