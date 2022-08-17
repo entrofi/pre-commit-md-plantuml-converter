@@ -6,24 +6,24 @@ set -eu -o pipefail
 
 for i in "$@"; do
   case $i in
-    -e=*|--extension=*)
-      EXTENSION="${i#*=}"
-      shift # past argument=value
-      ;;
-    -d=*|--image-dir=*)
-      IMAGE_DIR="${i#*=}"
-      shift # past argument=value
-      ;;
-    -p=*|--prefix=*)
-      PREFIX="${i#*=}"
-      shift # past argument=value
-      ;;
-    -*|--*)
-      echo "Unknown option $i"
-      exit 1
-      ;;
-    *)
-      ;;
+  -e=* | --extension=*)
+    EXTENSION="${i#*=}"
+    shift # past argument=value
+    ;;
+  -d=* | --image-dir=*)
+    IMAGE_DIR="${i#*=}"
+    shift # past argument=value
+    ;;
+  -p=* | --prefix=*)
+    PREFIX="${i#*=}"
+    shift # past argument=value
+    ;;
+  -* | --*)
+    echo "Unknown option $i"
+    exit 1
+    ;;
+  *) ;;
+
   esac
 done
 
@@ -39,17 +39,17 @@ function debugScriptArgs {
 
 function debugFileVars {
   if ! [[ -z "${DEBUG_VARS:-}" ]]; then
-      local -r currentFile="$1"
-      local -r prefixForImg="$2"
-      echo "============================================================================="
-      echo "Processing ${currentFile}"
-      echo "Current file              = ${filename}"
-      echo "Current file path         = ${FILE_PATH}"
-      echo "Current file base name    = ${FILE_BASE_NAME}"
-      echo "Current file extension    = ${FILE_EXT}"
-      echo "Current calculated prefix = ${prefixForImg}"
-      echo "Image dir                 = ${IMAGE_DIR}"
-      echo "Provided PREFIX           = ${PREFIX}"
+    local -r currentFile="$1"
+    local -r prefixForImg="$2"
+    echo "============================================================================="
+    echo "Processing ${currentFile}"
+    echo "Current file              = ${filename}"
+    echo "Current file path         = ${FILE_PATH}"
+    echo "Current file base name    = ${FILE_BASE_NAME}"
+    echo "Current file extension    = ${FILE_EXT}"
+    echo "Current calculated prefix = ${prefixForImg}"
+    echo "Image dir                 = ${IMAGE_DIR}"
+    echo "Provided PREFIX           = ${PREFIX}"
   fi
 }
 
@@ -71,7 +71,6 @@ function getImagePrefix {
   echo "${imagePrefixPrefix}"
 }
 
-
 debugScriptArgs "$@"
 
 for filename in "$@"; do
@@ -79,4 +78,14 @@ for filename in "$@"; do
   prefixForImages=$(getImagePrefix "${FILE_NAME_PREFIX}")
   debugFileVars "${filename}" "${prefixForImages}"
   convert-plantuml run "${filename}" -e "${EXTENSION}" -f "${FILE_PATH:-"."}" -i "${IMAGE_DIR}" -p ${prefixForImages}
+  changedImages=$(git ls-files -o --exclude-standard | grep "\(${IMAGE_DIR:-}\)\(.*\.${EXTENSION}\)")
+  if [ -z "$changedImages" ]; then
+    exit 0
+  else
+    echo "There are changed or newly generated images which haven't been indexed yet:"
+    for img in $changedImages; do
+        echo "$img"
+    done
+    exit 1
+  fi
 done
