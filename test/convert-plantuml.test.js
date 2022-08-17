@@ -1,5 +1,8 @@
 const {exec} = require('child_process');
+const fs = require('fs');
 
+
+jest.setTimeout(15000);
 
 // TODO convert this to unit test
 describe('convert-plantuml cli integration test', () => {
@@ -7,13 +10,17 @@ describe('convert-plantuml cli integration test', () => {
     const file = `test/test.md`;
     const extension = 'png';
     const filePath = 'test';
-    const imageDir = 'assets/uml/';
+    const imgRootDir = 'assets';
+    const imageDir = `${imgRootDir}/uml/`;
     const prefixForImages = '';
+    const outputFile = 'test/test_converted.md';
     exec(
-        `node ./src/convert-plantuml.js run '${file}' -e '${extension}' -f '${filePath}' -i '${imageDir}' -p '${prefixForImages}' -o .tmp/test_converted.md `,
+        `node ./src/convert-plantuml.js run '${file}' -e '${extension}' -f '${filePath}' -i '${imageDir}' -p '${prefixForImages}' -o ${outputFile} `,
         (error, stdout, stderr) => {
           expect(stdout).toBeFalsy();
           expect(stderr).toBeFalsy();
+          fs.rmSync(outputFile);
+          fs.rmSync(`test/${imgRootDir}`, {recursive: true});
           done();
         },
 
