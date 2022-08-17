@@ -12,11 +12,10 @@
   "version": "0.0.2",
   "dependencies": {
     "@entrofi/node-plantuml": "0.9.1",
-    "colors": "^1.4.0",
+    "colors": "1.4.0",
     "commander": "^9.4.0"
   },
   "devDependencies": {
-    "colors": "1.4.0",
     "eslint": ">=5.16.0",
     "eslint-config-google": "^0.14.0",
     "jest": "^28.1.3",
