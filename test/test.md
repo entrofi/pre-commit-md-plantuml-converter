@@ -87,7 +87,7 @@ It's just that! You have the live deployment
 !include <cloudogu/dogus/nexus>
 !include <cloudogu/dogus/jenkins>
 
-title Acme Adapter Dev-Stage Deployment
+title Acme Adapter Staging Deployment
 
 
 
@@ -112,9 +112,9 @@ rectangle "Deployment pipeline" as deploy #f4fff4 {
 
 }
 
-node "Dev-stage minion 5"  as minion_5 #aliceblue;line:blue;line.dotted;text:blue {
+node "Staging server 5"  as server_5 #aliceblue;line:blue;line.dotted;text:blue {
 }
-'node "Dev-stage minion 6"  as minion_6 #aliceblue;line:blue;line.dotted;text:blue {
+'node "Staging server 6"  as server_6 #aliceblue;line:blue;line.dotted;text:blue {
 '}
 
 
@@ -129,7 +129,7 @@ acme -> nexus_node
 Nexus ----> nexus_jar: Listen releases
 nexus_jar --> jenkins_instance
 jenkins_instance -left-> maven_release : Deploy artifact to dev stage
-maven_release --> minion_5
+maven_release --> server_5
 
 @enduml
 ```
