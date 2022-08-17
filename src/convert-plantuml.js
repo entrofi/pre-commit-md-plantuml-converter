@@ -89,7 +89,11 @@ const initCommandAndParse = () => {
 const main = async () => {
   const parsedConversionParams = initCommandAndParse();
   const processedOutput = processMarkdown(parsedConversionParams);
-  fs.writeFileSync(parsedConversionParams.outputFile, processedOutput);
+  await fs.writeFile(parsedConversionParams.outputFile, processedOutput, (error) => {
+    if (error) {
+      console.error(error);
+    }
+  });
 };
 
 main().then(process.stdout).catch(process.stderr);
