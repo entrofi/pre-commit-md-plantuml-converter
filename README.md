@@ -69,7 +69,7 @@ First you need to install the [pre-commit framework](https://pre-commit.com/#ins
 ```yaml
 repos:
   - repo: https://github.com/entrofi/pre-commit-md-plantuml-converter
-    rev: v0.0.2-RC3
+    rev: v0.0.2-LATEST
     hooks:
       - id:  md_plantuml_converter
         args: [--extension=png, --image-dir=./docs/assets/puml,  --prefix= ]
