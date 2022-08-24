@@ -78,7 +78,8 @@ for filename in "$@"; do
   prefixForImages=$(getImagePrefix "${FILE_NAME_PREFIX}")
   debugFileVars "${filename}" "${prefixForImages}"
   convert-plantuml run "${filename}" -e "${EXTENSION}" -f "${FILE_PATH:-"."}" -i "${IMAGE_DIR}" -p ${prefixForImages}
-  changedImages=$(git ls-files -o --exclude-standard | grep "\(${IMAGE_DIR:-}\)\(.*\.${EXTENSION}\)")
+
+  changedImages=$(git ls-files -o --exclude-standard  -m "*.$EXTENSION")
   if [ -z "$changedImages" ]; then
     exit 0
   else
